@@ -2,35 +2,49 @@ from transformers import BlipProcessor, BlipForConditionalGeneration, DetrImageP
 from PIL import Image
 import torch
 
+
 def get_image_caption(image_path):
-
     """
-    generates a short caption for the inputted image
-    inputs the image path and generates a caption
-    """
+    Generates a short caption for the provided image.
 
+    Args:
+        image_path (str): The path to the image file.
+
+    Returns:
+        str: A string representing the caption for the image.
+    """
     image = Image.open(image_path).convert('RGB')
-    model_name = 'Salesforce/blip-image-captioning-large'
-    device = "cpu"  #can use cuda if gpu is available
+
+    model_name = "Salesforce/blip-image-captioning-large"
+    device = "cpu"  # cuda
 
     processor = BlipProcessor.from_pretrained(model_name)
     model = BlipForConditionalGeneration.from_pretrained(model_name).to(device)
 
-    inputs = processor(image,return_tensors='pt').to(device) #image to normal transformation
-    output = model.generate(**inputs,max_new_tokens=20)
+    inputs = processor(image, return_tensors='pt').to(device)
+    output = model.generate(**inputs, max_new_tokens=20)
 
-    caption = processor.decode(output[0],skip_special_tokens=True)
+    caption = processor.decode(output[0], skip_special_tokens=True)
 
     return caption
 
 
 def detect_objects(image_path):
+    """
+    Detects objects in the provided image.
 
+    Args:
+        image_path (str): The path to the image file.
+
+    Returns:
+        str: A string with all the detected objects. Each object as '[x1, x2, y1, y2, class_name, confindence_score]'.
+    """
     image = Image.open(image_path).convert('RGB')
+
     processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50")
     model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50")
 
-    inputs = processor(images=image, return_tensors="pt")   
+    inputs = processor(images=image, return_tensors="pt")
     outputs = model(**inputs)
 
     # convert outputs (bounding boxes and class logits) to COCO API
@@ -40,10 +54,10 @@ def detect_objects(image_path):
 
     detections = ""
     for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
-        detections += '[{}, {}, {}, {}]'.format(int(box[0]),int(box[1]),int(box[2]),int(box[3]))
+        detections += '[{}, {}, {}, {}]'.format(int(box[0]), int(box[1]), int(box[2]), int(box[3]))
         detections += ' {}'.format(model.config.id2label[int(label)])
         detections += ' {}\n'.format(float(score))
-    
+
     return detections
 
 
