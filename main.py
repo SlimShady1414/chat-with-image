@@ -14,7 +14,7 @@ conversational_memory = ConversationBufferWindowMemory(
 )
 
 llm = ChatOpenAI(
-    openai_api_key='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',
+    openai_api_key='your_api_key_here',
     temperature=0,
     model_name="gpt-3.5-turbo"
 )
